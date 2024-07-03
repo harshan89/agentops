@@ -9,6 +9,7 @@ from .enums import Models
 from .decorators import record_function
 from .agent import track_agent
 from .log_config import logger
+import json
 
 try:
     from .partners.langchain_callback_handler import (
@@ -78,6 +79,20 @@ def init(
         inherited_session_id=inherited_session_id,
         skip_auto_end_session=skip_auto_end_session,
     )
+
+    supabase_results = c.get_ttd("d22d15dd-2bdb-44e4-acd5-afb5a241b158")
+    prompt_to_returns_map = {
+        (
+            str({"messages": item["prompt"]["messages"]})
+            if item["prompt"].get("type") == "chatml"
+            else str(item["prompt"])
+        ): item["returns"]
+        for item in supabase_results  # TODO: rename returns to completion_override
+    }
+    with open("ttd.json", "w") as file:
+        json.dump(prompt_to_returns_map, file)
+
+    print(supabase_results)
 
     return inherited_session_id or c.current_session_id
 

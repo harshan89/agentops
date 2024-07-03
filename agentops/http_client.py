@@ -111,3 +111,13 @@ class HttpClient:
             logger.warning("Could not post data - internal server error")
 
         return result
+
+    def get(
+        url: str,
+        api_key: Optional[str] = None,
+        parent_key: Optional[str] = None,
+        jwt: Optional[str] = None,
+        header=None,
+    ) -> Response:
+        # TODO?
+        pass

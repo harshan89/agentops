@@ -226,7 +226,7 @@ class LlmTracker:
 
         # v1.0.0+ responses are objects
         try:
-            self.llm_event.returns = response.model_dump()
+            self.llm_event.returns = response
             self.llm_event.agent_id = check_call_stack_for_agent_id()
             self.llm_event.prompt = kwargs["messages"]
             self.llm_event.prompt_tokens = response.usage.prompt_tokens
@@ -381,7 +381,7 @@ class LlmTracker:
         # Not enough to record StreamedChatResponse_ToolCallsGeneration because the tool may have not gotten called
 
         try:
-            self.llm_event.returns = response.dict()
+            self.llm_event.returns = response
             self.llm_event.agent_id = check_call_stack_for_agent_id()
             self.llm_event.prompt = []
             if response.chat_history:
@@ -430,31 +430,16 @@ class LlmTracker:
         def patched_function(*args, **kwargs):
             init_timestamp = get_ISO_time()
 
-            # Time Travel Debugging
-            vlite = VLite2(vdb_name="test")
-            threshold = 0.8
+            cache_map = None
 
-            messages = kwargs["messages"]
+            with open("ttd.json", "r") as file:
+                cache_map = json.load(file)
 
-            cache_query = messages[-1][
-                "content"
-            ]  # TODO: loop over all the messages to build cache_query
-
-            results = vlite.retrieve(
-                text=cache_query,
-                top_k=1,
-                autocut=False,
-                get_metadata=True,
-                get_similarities=True,
-            )
-            metadata = results["metadata"]
-            sims = results["scores"]
-            if metadata and sims:
-                if sims[0] > threshold:
-                    result_json_string = metadata[0]["cached_response"]
-                    result_model = ChatCompletion.model_validate_json(
-                        result_json_string
-                    )
+            if cache_map:
+                search_prompt = str({"messages": kwargs["messages"]})
+                result_from_cache = cache_map.get(search_prompt)
+                if result_from_cache:
+                    result_model = ChatCompletion.model_validate_json(result_from_cache)
                     return self._handle_response_v1_openai(
                         result_model, kwargs, init_timestamp
                     )
@@ -462,6 +447,39 @@ class LlmTracker:
             # Call the original function with its original arguments
             result = original_create(*args, **kwargs)
             return self._handle_response_v1_openai(result, kwargs, init_timestamp)
+
+            # Time Travel Debugging
+            # vlite = VLite2(vdb_name="test")
+            # threshold = 0.8
+
+            # messages = kwargs["messages"]
+
+            # cache_query = messages[-1][
+            #     "content"
+            # ]  # TODO: loop over all the messages to build cache_query
+
+            # results = vlite.retrieve(
+            #     text=cache_query,
+            #     top_k=1,
+            #     autocut=False,
+            #     get_metadata=True,
+            #     get_similarities=True,
+            # )
+            # metadata = results["metadata"]
+            # sims = results["scores"]
+            # if metadata and sims:
+            #     if sims[0] > threshold:
+            #         result_json_string = metadata[0]["cached_response"]
+            #         result_model = ChatCompletion.model_validate_json(
+            #             result_json_string
+            #         )
+            #         return self._handle_response_v1_openai(
+            #             result_model, kwargs, init_timestamp
+            #         )
+
+            # Call the original function with its original arguments
+            # result = original_create(*args, **kwargs)
+            # return self._handle_response_v1_openai(result, kwargs, init_timestamp)
 
         # Override the original method with the patched one
         completions.Completions.create = patched_function

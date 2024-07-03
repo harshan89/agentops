@@ -134,6 +134,16 @@ class Worker:
             f"{self.config.endpoint}/v2/create_agent", serialized_payload, jwt=self.jwt
         )
 
+    def get_ttd(self, ttd_id: str) -> str:
+        with self.lock:
+            payload = json.dumps({"ttd_id": ttd_id}).encode("utf-8")
+            res = HttpClient.post(
+                f"{self.config.endpoint}/v2/get_ttd",
+                payload,
+                jwt=self.jwt,
+            )
+            return res.body
+
     def run(self) -> None:
         while not self.stop_flag.is_set():
             time.sleep(self.config.max_wait_time / 1000)
