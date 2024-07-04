@@ -383,11 +383,6 @@ class Client(metaclass=MetaClient):
 
         return self._session.session_id
 
-    def get_ttd(self, ttd_id: str):
-        if self._worker is None:
-            return logger.warning("Cannot get ttd - no current worker")
-        return self._worker.get_ttd(ttd_id)
-
     def end_session(
         self,
         end_state: str,
