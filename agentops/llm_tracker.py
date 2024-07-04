@@ -432,8 +432,11 @@ class LlmTracker:
 
             cache_map = None
 
-            with open("ttd.json", "r") as file:
-                cache_map = json.load(file)
+            try:
+                with open("ttd.json", "r") as file:
+                    cache_map = json.load(file)
+            except FileNotFoundError:
+                cache_map = None
 
             if cache_map:
                 search_prompt = str({"messages": kwargs["messages"]})

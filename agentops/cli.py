@@ -8,12 +8,11 @@ def fetch_ttd_cache(ttd_id):
     endpoint = environ.get("AGENTOPS_API_ENDPOINT", "https://api.agentops.ai")  # TODO
     payload = json.dumps({"ttd_id": ttd_id}).encode("utf-8")
     ttd_res = HttpClient.post(f"{endpoint}/v2/get_ttd", payload)
-    print(ttd_res.body)
     # if ttd_res.status_code != 200:
     #     print(f"Failed to fetch TTD with status code {ttd_res.status_code}")
     #     return
 
-    print(f"Fetched TTD for TTD ID {ttd_id}")
+    print(f"Successfully fetched TTD cache for TTD ID {ttd_id}")
     prompt_to_returns_map = {
         (
             str({"messages": item["prompt"]["messages"]})
