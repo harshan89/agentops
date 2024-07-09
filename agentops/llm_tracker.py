@@ -9,7 +9,6 @@ from .helpers import get_ISO_time, check_call_stack_for_agent_id
 import inspect
 from typing import Optional
 import pprint
-from os import environ
 from .time_travel import fetch_response_from_time_travel_cache
 
 
@@ -36,8 +35,6 @@ class LlmTracker:
         self.client = client
         self.completion = ""
         self.llm_event: Optional[LLMEvent] = None
-        self._is_time_travel_mode = False
-        self._time_travel_map = None
 
     def _handle_response_v0_openai(self, response, kwargs, init_timestamp):
         """Handle responses for OpenAI versions <v1.0.0"""

@@ -11,6 +11,12 @@ class TimeTravel:
         self._time_travel_configured_correctly = True
         self._time_travel_map = None
 
+        try:
+            with open("time_travel.json", "r") as file:
+                self._time_travel_map = json.load(file)
+        except FileNotFoundError:
+            return
+
 
 def output_ttd_state_to_terminal(message=None):
     if TimeTravel()._time_travel_configured_correctly:
@@ -26,9 +32,6 @@ def output_ttd_state_to_terminal(message=None):
 
 def fetch_time_travel_id(ttd_id):
     try:
-        with open("time_travel.config", "w") as config_file:
-            config_file.write("Time_Travel_Debugging_Active=True\n")
-
         endpoint = environ.get("AGENTOPS_API_ENDPOINT", "https://api.agentops.ai")
         payload = json.dumps({"ttd_id": ttd_id}).encode("utf-8")
         ttd_res = HttpClient.post(f"{endpoint}/v2/get_ttd", payload)
@@ -48,34 +51,29 @@ def fetch_time_travel_id(ttd_id):
         }
         with open("time_travel.json", "w") as file:
             json.dump(prompt_to_returns_map, file)
+
+        set_time_travel_active_state("on")
+        TimeTravel()
     except Exception as e:
         _time_travel_configured_correctly = False
-        output_ttd_state_to_terminal(e)
+        # output_ttd_state_to_terminal(e)
 
 
 def fetch_response_from_time_travel_cache(kwargs):
-    TimeTravel()
     if not check_time_travel_active():
         return
-
-    if TimeTravel()._time_travel_map is None:
-        try:
-            with open("time_travel.json", "r") as file:  # TODO: name
-                TimeTravel()._time_travel_map = json.load(file)
-        except FileNotFoundError:
-            return
 
     if TimeTravel()._time_travel_map:
         search_prompt = str({"messages": kwargs["messages"]})
         result_from_cache = TimeTravel()._time_travel_map.get(search_prompt)
-        if result_from_cache:
-            logger.info(f"Time Travel Hit for prompt: %s", search_prompt)
-            return result_from_cache
-        else:
-            logger.info(f"Time Travel Miss for prompt: %s", search_prompt)
+        # if result_from_cache:
+        #     logger.info(f"Time Travel Hit for prompt: %s", search_prompt)
+        # else:
+        #     logger.info(f"Time Travel Miss for prompt: %s", search_prompt)
+        return result_from_cache
     else:
         _time_travel_configured_correctly = False
-        output_ttd_state_to_terminal()
+        # output_ttd_state_to_terminal()
 
 
 def check_time_travel_active():
@@ -84,7 +82,7 @@ def check_time_travel_active():
             for line in config_file:
                 key, value = line.strip().split("=")
                 if key == "Time_Travel_Debugging_Active" and value == "True":
-                    output_ttd_state_to_terminal()
+                    # output_ttd_state_to_terminal()
                     return True
     except Exception as e:
         pass
@@ -97,3 +95,7 @@ def set_time_travel_active_state(active_setting):
             config_file.write("Time_Travel_Debugging_Active=True\n")
         else:
             config_file.write("Time_Travel_Debugging_Active=False\n")
+
+
+def check_against_cache():
+    pass  # TODO: vlite
