@@ -7,9 +7,11 @@ from .log_config import logger
 from .event import LLMEvent, ActionEvent, ToolEvent, ErrorEvent
 from .helpers import get_ISO_time, check_call_stack_for_agent_id
 import inspect
-from vlite2 import VLite2
 from typing import Optional
 import pprint
+from os import environ
+from .time_travel import fetch_response_from_time_travel_cache
+
 
 original_create = None
 original_create_async = None
@@ -34,6 +36,8 @@ class LlmTracker:
         self.client = client
         self.completion = ""
         self.llm_event: Optional[LLMEvent] = None
+        self._is_time_travel_mode = False
+        self._time_travel_map = None
 
     def _handle_response_v0_openai(self, response, kwargs, init_timestamp):
         """Handle responses for OpenAI versions <v1.0.0"""
@@ -430,22 +434,12 @@ class LlmTracker:
         def patched_function(*args, **kwargs):
             init_timestamp = get_ISO_time()
 
-            cache_map = None
-
-            try:
-                with open("ttd.json", "r") as file:
-                    cache_map = json.load(file)
-            except FileNotFoundError:
-                cache_map = None
-
-            if cache_map:
-                search_prompt = str({"messages": kwargs["messages"]})
-                result_from_cache = cache_map.get(search_prompt)
-                if result_from_cache:
-                    result_model = ChatCompletion.model_validate_json(result_from_cache)
-                    return self._handle_response_v1_openai(
-                        result_model, kwargs, init_timestamp
-                    )
+            time_travel_response = fetch_response_from_time_travel_cache(kwargs)
+            if time_travel_response:
+                result_model = ChatCompletion.model_validate_json(time_travel_response)
+                return self._handle_response_v1_openai(
+                    result_model, kwargs, init_timestamp
+                )
 
             # Call the original function with its original arguments
             result = original_create(*args, **kwargs)
@@ -560,7 +554,7 @@ class LlmTracker:
         # Override the original method with the patched one
         cohere.Client.chat_stream = patched_function
 
-    def _override_method(self, api, method_path, module):
+    def _override_openai_v0(self, api, method_path, module):
         def handle_response(result, kwargs, init_timestamp):
             if api == "openai":
                 return self._handle_response_v0_openai(result, kwargs, init_timestamp)
@@ -657,7 +651,7 @@ class LlmTracker:
                         else:
                             # Patch openai <v1.0.0 methods
                             for method_path in self.SUPPORTED_APIS["openai"]["0.0.0"]:
-                                self._override_method(api, method_path, module)
+                                self._override_openai_v0(api, method_path, module)
 
                 if api == "cohere":
                     # Patch cohere v5.4.0+ methods

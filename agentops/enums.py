@@ -26,4 +26,4 @@ class Models(Enum):
 class EndState(Enum):
     SUCCESS = "Success"
     FAIL = "Fail"
-    INDETERMINATE = "Indeterminate"
+    INDETERMINATE = "Indeterminate"  # Default
