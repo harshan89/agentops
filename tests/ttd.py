@@ -60,9 +60,9 @@ city = content3.split("City:")[1].strip()
 chat_completion_4 = client.chat.completions.create(
     messages=[
         {
-            "content": "Come up with a weakness for superhero"
+            "content": "Come up with a weakness for superhero "
             + superhero
-            + "with superpower "
+            + " with superpower "
             + superpower
             + ". Just return the weakness in this format: 'Weakness: [weakness]'",
             "role": "user",
