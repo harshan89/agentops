@@ -3,6 +3,9 @@ from .http_client import HttpClient
 from os import environ
 from .log_config import logger
 from .helpers import singleton
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 @singleton
