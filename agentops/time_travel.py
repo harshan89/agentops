@@ -53,7 +53,7 @@ def fetch_time_travel_id(ttd_id):
             for item in ttd_res.body  # TODO: rename returns to completion_override
         }
         with open("time_travel.json", "w") as file:
-            json.dump(prompt_to_returns_map, file)
+            json.dump(prompt_to_returns_map, file, indent=4)
 
         set_time_travel_active_state("on")
         TimeTravel()
