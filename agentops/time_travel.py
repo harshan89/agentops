@@ -81,7 +81,7 @@ def fetch_response_from_time_travel_cache(kwargs):
 
 def check_time_travel_active():
     try:
-        with open("time_travel.config", "r") as config_file:
+        with open("time_travel.yaml", "r") as config_file:
             for line in config_file:
                 key, value = line.strip().split("=")
                 if key == "Time_Travel_Debugging_Active" and value == "True":
@@ -93,11 +93,19 @@ def check_time_travel_active():
 
 
 def set_time_travel_active_state(active_setting):
-    with open("time_travel.config", "a") as config_file:
-        if active_setting == "on":
-            config_file.write("Time_Travel_Debugging_Active=True\n")
-        else:
-            config_file.write("Time_Travel_Debugging_Active=False\n")
+    import yaml
+
+    config_path = "time_travel.yaml"
+    try:
+        with open(config_path, "r") as config_file:
+            config = yaml.safe_load(config_file) or {}
+    except FileNotFoundError:
+        config = {}
+
+    config["Time_Travel_Debugging_Active"] = True if active_setting == "on" else False
+
+    with open(config_path, "w") as config_file:
+        yaml.dump(config, config_file)
 
 
 def check_against_cache():
