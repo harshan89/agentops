@@ -80,13 +80,14 @@ def fetch_response_from_time_travel_cache(kwargs):
 
 
 def check_time_travel_active():
+    import yaml
+
     try:
         with open("time_travel.yaml", "r") as config_file:
-            for line in config_file:
-                key, value = line.strip().split("=")
-                if key == "Time_Travel_Debugging_Active" and value == "True":
-                    # output_ttd_state_to_terminal()
-                    return True
+            config = yaml.safe_load(config_file)
+            if config.get("Time_Travel_Debugging_Active", False):
+                # output_ttd_state_to_terminal()
+                return True
     except Exception as e:
         pass
     return False
