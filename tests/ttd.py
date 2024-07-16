@@ -21,7 +21,7 @@ chat_completion_1 = client.chat.completions.create(
             "role": "user",
         }
     ],
-    model="gpt-3.5-turbo-0613",
+    model="gpt-3.5-turbo-0125",
 )
 content1 = chat_completion_1.choices[0].message.content
 print(content1)
@@ -36,7 +36,7 @@ chat_completion_2 = client.chat.completions.create(
             "role": "user",
         }
     ],
-    model="gpt-3.5-turbo-0613",
+    model="gpt-3.5-turbo-0125",
 )
 content2 = chat_completion_2.choices[0].message.content
 print(content2)
@@ -51,7 +51,7 @@ chat_completion_3 = client.chat.completions.create(
             "role": "user",
         }
     ],
-    model="gpt-3.5-turbo-0613",
+    model="gpt-3.5-turbo-0125",
 )
 content3 = chat_completion_3.choices[0].message.content
 print(content3)
@@ -68,7 +68,7 @@ chat_completion_4 = client.chat.completions.create(
             "role": "user",
         }
     ],
-    model="gpt-3.5-turbo-0613",
+    model="gpt-3.5-turbo-0125",
 )
 content4 = chat_completion_4.choices[0].message.content
 print(content4)
@@ -84,7 +84,7 @@ chat_completion_5 = client.chat.completions.create(
             "role": "user",
         }
     ],
-    model="gpt-3.5-turbo-0613",
+    model="gpt-3.5-turbo-0125",
 )
 content5 = chat_completion_5.choices[0].message.content
 print(content5)
@@ -99,7 +99,7 @@ chat_completion_6 = client.chat.completions.create(
             "role": "user",
         }
     ],
-    model="gpt-3.5-turbo-0613",
+    model="gpt-3.5-turbo-0125",
 )
 content6 = chat_completion_6.choices[0].message.content
 print(content6)
@@ -128,7 +128,7 @@ chat_completion_7 = client.chat.completions.create(
             "role": "user",
         }
     ],
-    model="gpt-3.5-turbo-0613",
+    model="gpt-3.5-turbo-0125",
 )
 content7 = chat_completion_7.choices[0].message.content
 print(content7)
