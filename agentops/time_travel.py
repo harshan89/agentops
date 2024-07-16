@@ -69,7 +69,7 @@ def check_time_travel_active():
                 manage_time_travel_state(activated=True)
                 return True
     except Exception as e:
-        manage_time_travel_state(activated=False, error=e)
+        pass
 
     return False
 
