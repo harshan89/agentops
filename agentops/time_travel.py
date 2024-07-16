@@ -1,7 +1,6 @@
 import json
 from .http_client import HttpClient
 from os import environ
-from .log_config import logger
 from .helpers import singleton
 from dotenv import load_dotenv
 
@@ -11,7 +10,6 @@ load_dotenv()
 @singleton
 class TimeTravel:
     def __init__(self):
-        self._time_travel_configured_correctly = True
         self._time_travel_map = None
 
         try:
@@ -19,18 +17,6 @@ class TimeTravel:
                 self._time_travel_map = json.load(file)
         except FileNotFoundError:
             return
-
-
-def output_ttd_state_to_terminal(message=None):
-    if TimeTravel()._time_travel_configured_correctly:
-        # print("\033[43m", end="")  # Set background color to yellow # TODO in logger
-        logger.warning(f"Activating Time Travel Debugging")
-    else:
-        print("\033[0m", end="")  # Reset to default colors
-        if message:
-            logger.warning(f"Deactivating Time Travel Debugging: {message}")
-        else:
-            logger.warning(f"Deactivating Time Travel Debugging")
 
 
 def fetch_time_travel_id(ttd_id):
@@ -43,7 +29,7 @@ def fetch_time_travel_id(ttd_id):
                 f"Failed to fetch TTD with status code {ttd_res.status_code}"
             )
 
-        logger.info(f"Successfully fetched TTD cache for TTD ID {ttd_id}")
+        print(f"Successfully fetched TTD cache for TTD ID {ttd_id}")
         prompt_to_returns_map = {
             (
                 str({"messages": item["prompt"]["messages"]})
@@ -56,10 +42,8 @@ def fetch_time_travel_id(ttd_id):
             json.dump(prompt_to_returns_map, file, indent=4)
 
         set_time_travel_active_state("on")
-        TimeTravel()
     except Exception as e:
-        _time_travel_configured_correctly = False
-        # output_ttd_state_to_terminal(e)
+        manage_time_travel_state(activated=False, error=e)
 
 
 def fetch_response_from_time_travel_cache(kwargs):
@@ -69,14 +53,7 @@ def fetch_response_from_time_travel_cache(kwargs):
     if TimeTravel()._time_travel_map:
         search_prompt = str({"messages": kwargs["messages"]})
         result_from_cache = TimeTravel()._time_travel_map.get(search_prompt)
-        # if result_from_cache:
-        #     logger.info(f"Time Travel Hit for prompt: %s", search_prompt)
-        # else:
-        #     logger.info(f"Time Travel Miss for prompt: %s", search_prompt)
         return result_from_cache
-    else:
-        _time_travel_configured_correctly = False
-        # output_ttd_state_to_terminal()
 
 
 def check_time_travel_active():
@@ -85,11 +62,15 @@ def check_time_travel_active():
     try:
         with open("time_travel.yaml", "r") as config_file:
             config = yaml.safe_load(config_file)
-            if config.get("Time_Travel_Debugging_Active", False):
-                # output_ttd_state_to_terminal()
+            if config.get("Time_Travel_Debugging_Active", True):
+                # TODO: Find a way to only set background for cache hits or duration relevant to time travel.
+                # May not be possible. Right now we will set the background color multiple times which is benign
+                # but still not ideal
+                manage_time_travel_state(activated=True)
                 return True
     except Exception as e:
-        pass
+        manage_time_travel_state(activated=False, error=e)
+
     return False
 
 
@@ -106,8 +87,34 @@ def set_time_travel_active_state(active_setting):
     config["Time_Travel_Debugging_Active"] = True if active_setting == "on" else False
 
     with open(config_path, "w") as config_file:
-        yaml.dump(config, config_file)
+        try:
+            yaml.dump(config, config_file)
+        except:
+            print(
+                f"🖇 AgentOps: Unable to write to {config_path}. Time Travel not activated"
+            )
+            return
+
+        if active_setting == "on":
+            manage_time_travel_state(activated=True)
+            print("🖇 AgentOps: Time Travel Activated")
+        else:
+            manage_time_travel_state(activated=False)
+            print("🖇 AgentOps: Time Travel Deactivated")
 
 
-def check_against_cache():
-    pass  # TODO: vlite
+def set_background_color_truecolor(r, g, b):
+    print(f"\033[48;2;{r};{g};{b}m\033[K", end="")
+
+
+def reset_terminal_background_color():
+    print("\033[0m", end="")
+
+
+def manage_time_travel_state(activated=False, error=None):
+    if activated:
+        set_background_color_truecolor(147, 243, 250)  # lightblue
+    else:
+        reset_terminal_background_color()
+        if error is not None:
+            print(f"Deactivating Time Travel. Error with configuration: {error}")
